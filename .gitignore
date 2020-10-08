@@ -1,0 +1,6 @@
+# nix
+.envrc
+result
+
+# haskell
+dist-newstyle/
