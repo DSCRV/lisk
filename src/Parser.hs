@@ -3,7 +3,7 @@ module Parser ( parseLispValue
               , parseString
               , parseInt
               , parseFloat
-              , parseAtom
+              , parseId
               , parseList
               , parseQuote
               , parseDottedList
@@ -37,7 +37,7 @@ parseInt = IntLiteral . read <$> many1 digit
 
 parseFloat :: Parser Expr
 parseFloat = do
-    characteristic <- many digit
+    characteristic <- many1 digit
     char '.'
     mantissa <- many1 digit
     return $ (FloatLiteral . read) $ characteristic ++ "." ++ mantissa
@@ -45,8 +45,8 @@ parseFloat = do
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+:/-=<?>@^_~"
 
-parseAtom :: Parser Expr
-parseAtom = do
+parseId :: Parser Expr
+parseId = do
     first <- letter <|> symbol
     rest <- many (letter <|> symbol <|> digit)
     let atom = first:rest
@@ -77,12 +77,12 @@ parseQuote = do
 
 parseLispValue :: Parser Expr
 parseLispValue =
-    try parseAtom
+    try parseId
     <|> parseString
+    <|> try parseFloat
     <|> parseInt
     <|> parseQuote
     -- TODO: figure out a way to have floats and dotted lists
-    -- <|> parseFloat
     <|> do
         char '('
         x <- try parseList <|> parseDottedList

@@ -19,6 +19,7 @@ eval :: Expr -> LispResult Expr
 eval v@(StringLiteral s)     = return v
 eval v@(IntLiteral i)        = return v
 eval v@(BoolLiteral b)       = return v
+eval v@(FloatLiteral f)      = return v
 -- handle quotes as literals
 eval (List[Id "quote", val]) = return val
 eval (List (Id fn : args))   = mapM eval args >>= apply fn

@@ -34,6 +34,6 @@ main = do
     args <- getArgs
     if null args
        then do
-           print ";;; Entering lisk repl ..."
+           putStrLn ";;; Entering lisk repl ..."
            repl
        else print $ eval =<< readExpr (head args)
