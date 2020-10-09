@@ -2,21 +2,27 @@ module Evaluator (
     eval
     ) where
 
+import           Control.Monad.Except
+import           Error                         (LispError (..), LispResult (..),
+                                                unwrap)
 import           Operators
 import           Parser
 import           Text.ParserCombinators.Parsec
 
-apply :: String -> [Expr] -> Expr
+apply :: String -> [Expr] -> LispResult Expr
 apply fn args =
     case lookup fn primitives of
       Just f -> f args
-      _      -> BoolLiteral False -- TODO: error out instead
+      _      -> throwError $ UnknownFunction fn
 
-eval :: Expr -> Expr
-eval v@(StringLiteral s)     = v
-eval v@(IntLiteral i)        = v
-eval v@(BoolLiteral b)       = v
+eval :: Expr -> LispResult Expr
+eval v@(StringLiteral s)     = return v
+eval v@(IntLiteral i)        = return v
+eval v@(BoolLiteral b)       = return v
 -- handle quotes as literals
-eval (List[Id "quote", val]) = val
-eval (List (Id fn : args))   = apply fn $ map eval args
+eval (List[Id "quote", val]) = return val
+eval (List (Id fn : args))   = mapM eval args >>= apply fn
+
+-- handle bad forms
+eval idk = throwError $ BadForm "lisk can't recognize this form" idk
 

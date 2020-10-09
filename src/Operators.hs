@@ -2,9 +2,11 @@ module Operators (
     primitives
     ) where
 
+import           Control.Monad.Except
+import           Error                (LispError (..), LispResult (..))
 import           Parser
 
-primitives :: [(String, [Expr] -> Expr)]
+primitives :: [(String, [Expr] -> LispResult Expr)]
 primitives =
     [
     ("+", arithmetic (+))
@@ -13,10 +15,14 @@ primitives =
     , ("/", arithmetic div)
     ]
 
-arithmetic :: (Integer -> Integer -> Integer) -> [Expr] -> Expr
-arithmetic op args = IntLiteral $ foldl1 op $ map unwrapNum args
+arithmetic :: (Integer -> Integer -> Integer) -> [Expr] -> LispResult Expr
+arithmetic op args
+    | length args < 2 = throwError $ ArgCount 2 args
+    | otherwise = do
+        as <- mapM unwrapNum args
+        return . IntLiteral $ foldl1 op as
 
-unwrapNum :: Expr -> Integer
-unwrapNum (IntLiteral n) = n
-unwrapNum _              = undefined
+unwrapNum :: Expr -> LispResult Integer
+unwrapNum (IntLiteral n) = return n
+unwrapNum x              = throwError $ TypeMismatch "number" x
 
