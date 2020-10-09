@@ -13,10 +13,17 @@ primitives =
     , ("-", arithmetic (-))
     , ("*", arithmetic (*))
     , ("/", arithmetic (/))
+    , (">", comparator (>))
+    , ("<", comparator (<))
+    , (">=", comparator (>=))
+    , ("<=", comparator (<=))
+    , ("=", comparator (==))
+    , ("!=", comparator (/=))
     ]
 
 data LispNumber = I Integer
                 | F Double
+                deriving (Eq, Ord)
 
 instance Num LispNumber where
     -- TODO:
@@ -40,6 +47,13 @@ arithmetic op args
     | otherwise = do
         as <- mapM unwrapNum args
         return . wrapNum $ foldl1 op as
+
+comparator :: (LispNumber -> LispNumber -> Bool) -> [Expr] -> LispResult Expr
+comparator op args
+    | length args < 2 = throwError $ ArgCount 2 args
+    | otherwise = do
+        as <- mapM unwrapNum args
+        return . BoolLiteral . all (== True) $ zipWith op as (tail as)
 
 unwrapNum :: Expr -> LispResult LispNumber
 unwrapNum (IntLiteral n)   =  return $ I n
