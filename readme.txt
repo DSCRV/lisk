@@ -18,9 +18,11 @@ cabal:
 
   cabal run
 
+
 todo
 ----
 
-* use Control.Monad.Except from mtl to handle errors
-* implement property based testing with quickcheck, look
-  under tests/Properties.hs
+* implement correct double/int interaction (src/Operators.hs)
+* implement boolean operations: and, not, or
+* write Ord instance for LispNumber (src/Operators.hs)
+* implement property based testing with quickcheck (tests/Properties.hs)

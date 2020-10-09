@@ -19,6 +19,10 @@ data LispNumber = I Integer
                 | F Double
 
 instance Num LispNumber where
+    -- TODO:
+    -- float op anything = float
+    -- int op int = int
+    -- int op float = float
     (I a) + (I b) = I $ a + b
     (F a) + (F b) = F $ a + b
     (I a) - (I b) = I $ a - b
