@@ -20,6 +20,8 @@ primitives =
     , ("=", comparator (==))
     , ("!=", comparator (/=))
     , ("not", unaryBool not)
+    , ("or", naryBool (||))
+    , ("and", naryBool (&&))
     ]
 
 data LispNumber = I Integer
@@ -66,7 +68,9 @@ unaryBool op args
 naryBool :: (Bool -> Bool -> Bool) -> [Expr] -> LispResult Expr
 naryBool op args
   | length args < 2 = throwError $ ArgCount 2 args
-
+  | otherwise = do
+      as <- mapM unwrapBool args
+      return . BoolLiteral $ foldl1 op as
 
 unwrapNum :: Expr -> LispResult LispNumber
 unwrapNum (IntLiteral n)   =  return $ I n
