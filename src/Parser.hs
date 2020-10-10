@@ -13,16 +13,14 @@ import           Control.Applicative           ((<$>))
 import           Control.Monad                 (liftM)
 import           Text.ParserCombinators.Parsec
 
-
-type Ident = String
-
+-- TODO: use LispNumber (src/Operators.hs) here instead of IntLiteral and FloatLiteral
 data Expr = List [Expr]
           | DottedList [Expr] Expr
           | StringLiteral String
           | IntLiteral Integer
           | FloatLiteral Double
           | BoolLiteral Bool
-          | Id Ident
+          | Id String
           deriving (Eq)
 
 parseString :: Parser Expr
@@ -68,12 +66,17 @@ parseDottedList = do
     whiteSpace
     DottedList head <$> parseLispValue
 
-parseQuote :: Parser Expr
-parseQuote = do
-    char '\''
+type Alias = String
+parseModifier :: Char -> Alias -> Parser Expr
+parseModifier c alias = do
+    char c
     x <- parseLispValue
-    return $ List [Id "quote", x]
+    return $ List [Id alias, x]
 
+parseQuote = parseModifier '\'' "quote"
+parseQuasiquote = parseModifier '`' "quasiquote"
+parseUnquote = parseModifier ',' "unquote"
+-- TODO: add modifier for unquote splicing
 
 parseLispValue :: Parser Expr
 parseLispValue =
@@ -82,7 +85,8 @@ parseLispValue =
     <|> try parseFloat
     <|> parseInt
     <|> parseQuote
-    -- TODO: figure out a way to have floats and dotted lists
+    <|> parseQuasiquote
+    <|> parseUnquote
     <|> do
         char '('
         x <- try parseList <|> parseDottedList
@@ -90,12 +94,15 @@ parseLispValue =
         return x
     <?> "expected lisp value!"
 
+showLispList :: [Expr] -> String
+showLispList = unwords . map show
+
 instance Show Expr where
-    show (DottedList xs x)   = "(" ++ unwords (map show xs) ++ " . " ++ show x ++ ")"
-    show (List xs)           = "(" ++ unwords (map show xs) ++ ")"
+    show (DottedList xs x)   = "(" ++ showLispList xs ++ " . " ++ show x ++ ")"
+    show (List xs)           = "(" ++ showLispList xs ++ ")"
     show (StringLiteral s)   = "\"" ++ s ++ "\""
     show (IntLiteral n)      = show n
     show (FloatLiteral n)    = show n
     show (BoolLiteral True)  = "#t"
     show (BoolLiteral False) = "#f"
-    show (Id i) = i
+    show (Id i)              = i
