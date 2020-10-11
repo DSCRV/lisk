@@ -4,9 +4,7 @@ module Parser ( parseLispValue
               , parseInt
               , parseFloat
               , parseId
-              , parseList
               , parseQuote
-              , parseDottedList
               ) where
 
 import           Control.Applicative           ((<$>))
@@ -14,6 +12,8 @@ import           Control.Monad                 (liftM)
 import           Text.ParserCombinators.Parsec
 
 -- TODO: use LispNumber (src/Operators.hs) here instead of IntLiteral and FloatLiteral
+-- TODO: add character literals: \#a \#b \#c \#space \#newline
+-- TODO: add support for complex numbers, oct and hex numbers
 data Expr = List [Expr]
           | DottedList [Expr] Expr
           | StringLiteral String
@@ -23,10 +23,13 @@ data Expr = List [Expr]
           | Id String
           deriving (Eq)
 
+-- backslash double quote escapes a quote inside strings
+quotedChar = noneOf ['\"'] <|> try (string "\\\"" >> return '"')
+
 parseString :: Parser Expr
 parseString = do
     char '"'
-    innards <- many (noneOf "\"")
+    innards <- many quotedChar
     char '"'
     return (StringLiteral innards)
 
@@ -56,16 +59,6 @@ parseId = do
 whiteSpace :: Parser ()
 whiteSpace = skipMany1 space
 
-parseList :: Parser Expr
-parseList = List <$> sepBy parseLispValue whiteSpace
-
-parseDottedList :: Parser Expr
-parseDottedList = do
-    head <- endBy parseLispValue whiteSpace
-    char '.'
-    whiteSpace
-    DottedList head <$> parseLispValue
-
 type Alias = String
 parseModifier :: Char -> Alias -> Parser Expr
 parseModifier c alias = do
@@ -76,7 +69,7 @@ parseModifier c alias = do
 parseQuote = parseModifier '\'' "quote"
 parseQuasiquote = parseModifier '`' "quasiquote"
 parseUnquote = parseModifier ',' "unquote"
--- TODO: add modifier for unquote splicing
+-- TODO: add modifier for unquote splicing: ,@
 
 parseLispValue :: Parser Expr
 parseLispValue =
@@ -87,12 +80,15 @@ parseLispValue =
     <|> parseQuote
     <|> parseQuasiquote
     <|> parseUnquote
+    -- handles lists and dotted lists
     <|> do
-        char '('
-        x <- try parseList <|> parseDottedList
-        char ')'
-        return x
-    <?> "expected lisp value!"
+        char '(' >> spaces
+        x <- sepEndBy parseLispValue whiteSpace
+        spaces
+        t <- optionMaybe $ char '.' >> space >> parseLispValue
+        spaces >> char ')'
+        return $ maybe (List x) (DottedList x) t
+    <?> "lisp value"
 
 showLispList :: [Expr] -> String
 showLispList = unwords . map show

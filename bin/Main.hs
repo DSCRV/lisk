@@ -19,7 +19,8 @@ readExpr inp =
 
 repl :: IO ()
 repl = do
-    inp <- readline "(lisk)> "
+    -- \u2020 † - obelisk
+    inp <- readline "† "
     case inp of
       Nothing -> return ()
       Just ",q" -> return ()
