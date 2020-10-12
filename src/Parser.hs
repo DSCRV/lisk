@@ -97,7 +97,7 @@ parseLispValue =
         char '(' >> spaces
         x <- sepEndBy parseLispValue whiteSpace
         spaces
-        t <- optionMaybe $ space >> char '.' >> space >> parseLispValue
+        t <- optionMaybe $ char '.' >> space >> parseLispValue
         spaces >> char ')'
         return $ maybe (List x) (DottedList x) t
     <?> "lisp value"
