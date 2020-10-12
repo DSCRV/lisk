@@ -26,8 +26,7 @@ repl = do
       Just ",q" -> return ()
       Just line -> do
           addHistory line
-          -- TODO: don't directly print Either values
-          print $ eval =<< readExpr line
+          putStrLn $ either show show $ eval =<< readExpr line
           repl
 
 main :: IO ()

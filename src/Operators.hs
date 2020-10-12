@@ -46,26 +46,31 @@ instance Fractional LispNumber where
     (I a) / (F b) = F $ fromIntegral a / b
     (F a) / (F b) = F $ a / b
 
-arithmetic :: (LispNumber -> LispNumber -> LispNumber) -> [Expr] -> LispResult Expr
+type Arithmetic = LispNumber -> LispNumber -> LispNumber
+type Comparator = LispNumber -> LispNumber -> Bool
+type UnaryBool = Bool -> Bool
+type NaryBool = Bool -> Bool -> Bool
+
+arithmetic :: Arithmetic -> [Expr] -> LispResult Expr
 arithmetic op args
-    | length args < 2 = throwError $ ArgCount 2 args
+    | null args = throwError $ ArgCount 1 args
     | otherwise = do
         as <- mapM unwrapNum args
         return . wrapNum $ foldl1 op as
 
-comparator :: (LispNumber -> LispNumber -> Bool) -> [Expr] -> LispResult Expr
+comparator :: Comparator -> [Expr] -> LispResult Expr
 comparator op args
     | length args < 2 = throwError $ ArgCount 2 args
     | otherwise = do
         as <- mapM unwrapNum args
         return . BoolLiteral . all (== True) $ zipWith op as (tail as)
 
-unaryBool :: (Bool -> Bool) -> [Expr] -> LispResult Expr
+unaryBool :: UnaryBool -> [Expr] -> LispResult Expr
 unaryBool op args
   | length args /= 1 = throwError $ ArgCount 1 args
   | otherwise = BoolLiteral . op <$> unwrapBool (head args)
 
-naryBool :: (Bool -> Bool -> Bool) -> [Expr] -> LispResult Expr
+naryBool :: NaryBool -> [Expr] -> LispResult Expr
 naryBool op args
   | length args < 2 = throwError $ ArgCount 2 args
   | otherwise = do

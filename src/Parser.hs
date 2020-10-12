@@ -33,15 +33,27 @@ parseString = do
     char '"'
     return (StringLiteral innards)
 
+parseSign :: Parser (Maybe Char)
+parseSign = do
+    sign <- optionMaybe (oneOf "+-")
+    return $ case sign of
+               Just '+' -> Nothing
+               s        -> s
+
 parseInt :: Parser Expr
-parseInt = IntLiteral . read <$> many1 digit
+parseInt = do
+    sign <- parseSign
+    val <- many1 digit
+    return $ (IntLiteral . read) $ maybe val (:val) sign
 
 parseFloat :: Parser Expr
 parseFloat = do
+    sign <- parseSign
     characteristic <- many1 digit
     char '.'
     mantissa <- many1 digit
-    return $ (FloatLiteral . read) $ characteristic ++ "." ++ mantissa
+    let fval = characteristic ++ "." ++ mantissa
+    return $ (FloatLiteral . read) $ maybe fval (:fval) sign
 
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+:/-=<?>@^_~"
@@ -73,10 +85,10 @@ parseUnquote = parseModifier ',' "unquote"
 
 parseLispValue :: Parser Expr
 parseLispValue =
-    try parseId
-    <|> parseString
+    parseString
     <|> try parseFloat
-    <|> parseInt
+    <|> try parseInt
+    <|> try parseId
     <|> parseQuote
     <|> parseQuasiquote
     <|> parseUnquote
@@ -85,7 +97,7 @@ parseLispValue =
         char '(' >> spaces
         x <- sepEndBy parseLispValue whiteSpace
         spaces
-        t <- optionMaybe $ char '.' >> space >> parseLispValue
+        t <- optionMaybe $ space >> char '.' >> space >> parseLispValue
         spaces >> char ')'
         return $ maybe (List x) (DottedList x) t
     <?> "lisp value"
