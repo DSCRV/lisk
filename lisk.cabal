@@ -27,7 +27,8 @@ library
     Parser,
     Evaluator,
     Operators,
-    Error
+    Error.Base
+    Error.Pretty
 
 executable lisk
   default-language: Haskell2010

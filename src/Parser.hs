@@ -69,7 +69,10 @@ parseId = do
                _    -> Id atom
 
 whiteSpace :: Parser ()
-whiteSpace = skipMany1 space
+whiteSpace = skipMany1 $ oneOf [' ', '\n']
+
+optionalWhiteSpace :: Parser ()
+optionalWhiteSpace = skipMany $ oneOf [' ', '\n']
 
 type Alias = String
 parseModifier :: Char -> Alias -> Parser Expr
@@ -98,7 +101,7 @@ parseLispValue =
         x <- sepEndBy parseLispValue whiteSpace
         spaces
         t <- optionMaybe $ char '.' >> space >> parseLispValue
-        spaces >> char ')'
+        optionalWhiteSpace >> char ')'
         return $ maybe (List x) (DottedList x) t
     <?> "lisp value"
 
