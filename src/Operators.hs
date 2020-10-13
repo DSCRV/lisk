@@ -3,7 +3,7 @@ module Operators (
     ) where
 
 import           Control.Monad.Except
-import           Error                (LispError (..), LispResult (..))
+import           Error.Base           (LispError (..), LispResult (..))
 import           Parser
 
 primitives :: [(String, [Expr] -> LispResult Expr)]

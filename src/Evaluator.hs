@@ -3,7 +3,7 @@ module Evaluator (
     ) where
 
 import           Control.Monad.Except
-import           Error                         (LispError (..), LispResult (..),
+import           Error.Base                    (LispError (..), LispResult (..),
                                                 unwrap)
 import           Operators
 import           Parser

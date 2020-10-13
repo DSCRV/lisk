@@ -2,8 +2,9 @@ module Main where
 
 import           Control.Monad                 (liftM)
 import           Control.Monad.Except          (throwError)
-import           Error                         (LispError (..), LispResult (..),
+import           Error.Base                    (LispError (..), LispResult (..),
                                                 unwrap)
+import           Error.Pretty                  (defaults, showError)
 import           Evaluator                     (eval)
 import           Parser                        (Expr (..), parseLispValue)
 import           System.Console.Readline
@@ -12,7 +13,7 @@ import           Text.ParserCombinators.Parsec
 
 readExpr :: String -> LispResult Expr
 readExpr inp =
-    case parse parseLispValue "(unknown)" inp of
+    case parse parseLispValue "(lisk-repl)" inp of
       Left err  -> throwError $ Parse err
       Right val -> return val
 
@@ -26,7 +27,8 @@ repl = do
       Just ",q" -> return ()
       Just line -> do
           addHistory line
-          putStrLn $ either show show $ eval =<< readExpr line
+          let pp = showError defaults
+          either (putStrLn . pp line) print $ readExpr line >>= eval
           repl
 
 main :: IO ()
