@@ -15,6 +15,7 @@ import           Text.ParserCombinators.Parsec
 -- TODO: add character literals: \#a \#b \#c \#space \#newline
 -- TODO: add support for complex numbers, oct and hex numbers
 data Expr = List [Expr]
+          | Vector [Expr]
           | DottedList [Expr] Expr
           | StringLiteral String
           | IntLiteral Integer
@@ -55,8 +56,15 @@ parseFloat = do
     let fval = characteristic ++ "." ++ mantissa
     return $ (FloatLiteral . read) $ maybe fval (:fval) sign
 
+parseVector :: Parser Expr
+parseVector = do
+    string "#(" >> optionalWhiteSpace
+    x <- sepEndBy parseLispValue whiteSpace
+    optionalWhiteSpace >> char ')'
+    return $ Vector x
+
 symbol :: Parser Char
-symbol = oneOf "!#$%&|*+:/-=<?>@^_~"
+symbol = oneOf "!$%&|*+:/-=<?>@^_~"
 
 parseId :: Parser Expr
 parseId = do
@@ -95,9 +103,10 @@ parseLispValue =
     <|> parseQuote
     <|> parseQuasiquote
     <|> parseUnquote
+    <|> parseVector
     -- handles lists and dotted lists
     <|> do
-        char '(' >> spaces
+        char '(' >> optionalWhiteSpace
         x <- sepEndBy parseLispValue whiteSpace
         spaces
         t <- optionMaybe $ char '.' >> space >> parseLispValue
@@ -111,6 +120,7 @@ showLispList = unwords . map show
 instance Show Expr where
     show (DottedList xs x)   = "(" ++ showLispList xs ++ " . " ++ show x ++ ")"
     show (List xs)           = "(" ++ showLispList xs ++ ")"
+    show (Vector xs)         = "#(" ++ showLispList xs ++ ")"
     show (StringLiteral s)   = "\"" ++ s ++ "\""
     show (IntLiteral n)      = show n
     show (FloatLiteral n)    = show n

@@ -16,10 +16,11 @@ apply fn args = maybe
     (lookup fn primitives)
 
 eval :: Expr -> LispResult Expr
-eval v@(StringLiteral s)     = return v
-eval v@(IntLiteral i)        = return v
-eval v@(BoolLiteral b)       = return v
-eval v@(FloatLiteral f)      = return v
+eval v@(StringLiteral s) = return v
+eval v@(IntLiteral i)    = return v
+eval v@(BoolLiteral b)   = return v
+eval v@(FloatLiteral f)  = return v
+eval v@(Vector xs)       = liftM Vector $ mapM eval xs
 -- handle quotes as literals
 eval (List[Id "quote", val])      = return val
 eval (List[Id "quasiquote", val]) = undefined
