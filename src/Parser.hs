@@ -64,7 +64,7 @@ parseVector = do
     return $ Vector x
 
 symbol :: Parser Char
-symbol = oneOf "!$%&|*+:/-=<?>@^_~"
+symbol = oneOf "!#$%&|*+:/-=<?>@^_~"
 
 parseId :: Parser Expr
 parseId = do
@@ -99,11 +99,11 @@ parseLispValue =
     parseString
     <|> try parseFloat
     <|> try parseInt
+    <|> try parseVector
     <|> try parseId
     <|> parseQuote
     <|> parseQuasiquote
     <|> parseUnquote
-    <|> parseVector
     -- handles lists and dotted lists
     <|> do
         char '(' >> optionalWhiteSpace
