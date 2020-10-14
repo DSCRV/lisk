@@ -1,6 +1,6 @@
 module Main where
 
-import           Properties
+import           Properties      (runTests)
 import           Test.QuickCheck
 
-main = tests
+main = runTests

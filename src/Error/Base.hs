@@ -5,12 +5,9 @@ module Error.Base (
              ) where
 
 import           Control.Monad.Except
-import           Data.List                     (intercalate, nub)
 import           Parser
 import           Text.Parsec
 import           Text.Parsec.Error
-import           Text.Parsec.Pos
-import           Text.Parsec.String            (Parser)
 import           Text.ParserCombinators.Parsec
 
 data LispError = Parse ParseError

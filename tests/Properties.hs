@@ -1,25 +1,31 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Properties where
+module Properties (
+                  runTests
+                  ) where
 
+import           Data.Maybe      (fromJust)
+import           Error.Base      (unwrap)
+import           Evaluator       (eval)
+import           Operators       (primitives)
 import           Parser          (Expr (..), parseLispValue, parseQuote)
-
 import           Test.QuickCheck
 
--- some tests would go here hopefully
+addition = fromJust $ lookup "+" primitives
+multiplication = fromJust $ lookup "*" primitives
 
--- a filler test to test the test suite :^)
-qsort :: (Ord a) => [a] -> [a]
-qsort [] = []
-qsort [x] = [x]
-qsort (x:xs) = qsort left ++ [x] ++ qsort right
-    where left = filter (<= x) xs
-          right = filter (> x) xs
+prop_commutativeAdd :: [Integer] -> Property
+prop_commutativeAdd xs =
+    not (null xs) ==> rhs == lhs
+        where rhs = (unwrap . addition) exprs
+              lhs = (unwrap . addition . reverse) exprs
+              exprs = map IntLiteral xs
 
-checkList :: (Ord a) => [a] -> Bool
-checkList = ordered . qsort
-    where ordered []       = True
-          ordered [x]      = True
-          ordered (x:y:xs) = x <= y && ordered (y:xs)
+prop_commutativeMul :: [Integer] -> Property
+prop_commutativeMul xs =
+    not (null xs) ==> rhs == lhs
+        where rhs = (unwrap . multiplication) exprs
+              lhs = (unwrap . multiplication . reverse) exprs
+              exprs = map IntLiteral xs
 
 return []
-tests = $quickCheckAll
+runTests = $quickCheckAll
