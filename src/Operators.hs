@@ -9,19 +9,23 @@ import           Parser
 primitives :: [(String, [Expr] -> LispResult Expr)]
 primitives = map (\(n, f) -> (n, f n))
     [
-           ("+" , arithmetic (+))
-         , ("-" , arithmetic (-))
-         , ("*" , arithmetic (*))
-         , ("/" , arithmetic (/))
-         , (">" , comparator (>))
-         , ("<" , comparator (<))
-         , (">=" , comparator (>=))
-         , ("<=" , comparator (<=))
-         , ("=" , comparator (==))
-         , ("!=" , comparator (/=))
-         , ("not" , unaryBool not)
-         , ("or" , naryBool  (||))
-         , ("and" , naryBool  (&&))
+    ("+", arithmetic (+))
+    , ("-", arithmetic (-))
+    , ("*", arithmetic (*))
+    , ("/", arithmetic (/))
+    , (">", comparator (>))
+    , ("<", comparator (<))
+    , (">=", comparator (>=))
+    , ("<=", comparator (<=))
+    , ("=" , comparator (==))
+    , ("!=" , comparator (/=))
+    , ("not", unaryBool not)
+    , ("or", naryBool  (||))
+    , ("and", naryBool  (&&))
+    , ("car", car)
+    , ("cdr", cdr)
+    , ("cons", cons)
+    , ("null?", isNull)
     ]
 
 data LispNumber = I Integer
@@ -90,3 +94,31 @@ wrapNum (F n) = FloatLiteral n
 unwrapBool :: Expr -> LispResult Bool
 unwrapBool (BoolLiteral s) = return s
 unwrapBool x               = throwError $ TypeMismatch "boolean" x
+
+-- list primitives
+
+car :: FName -> [Expr] -> LispResult Expr
+car _ [List (x:xs)]          = return x
+car _ [DottedList (x:xs) _ ] = return x
+car _ [somethingElse]        = throwError $ TypeMismatch "pair" somethingElse
+car fn mulArgs               = throwError $ ArgCount fn 1 mulArgs
+
+cdr :: FName -> [Expr] -> LispResult Expr
+cdr _ [List (x:xs)]         = return $ List xs
+cdr _ [DottedList [_] tail] = return tail
+cdr _ [DottedList (_:xs) t] = return $ DottedList xs t
+cdr _ [somethingElse]       = throwError $ TypeMismatch "pair" somethingElse
+cdr fn mulArgs              = throwError $ ArgCount fn 1 mulArgs
+
+cons :: FName -> [Expr] -> LispResult Expr
+cons _ [val, List []]            = return $ List [val]
+cons _ [val, List ls]            = return $ List $ val:ls
+cons _ [val, DottedList ls tail] = return $ DottedList (val:ls) tail
+cons _ [v1, v2]                  = return $ DottedList [v1] v2
+cons fn mulArgs                  = throwError $ ArgCount fn 2 mulArgs
+
+isNull :: FName -> [Expr] -> LispResult Expr
+isNull _ [List []] = return $ BoolLiteral True
+isNull _ [List _]  = return $ BoolLiteral False
+isNull _ [arg]     = throwError $ TypeMismatch "pair" arg
+isNull fn args     = throwError $ ArgCount fn 1 args

@@ -10,8 +10,6 @@ import           Operators       (primitives)
 import           Parser          (Expr (..), parseLispValue, parseQuote)
 import           Test.QuickCheck
 
-addition = fromJust $ lookup "+" primitives
-multiplication = fromJust $ lookup "*" primitives
 
 prop_commutativeAdd :: [Integer] -> Property
 prop_commutativeAdd xs =
@@ -19,6 +17,7 @@ prop_commutativeAdd xs =
         where rhs = (unwrap . addition) exprs
               lhs = (unwrap . addition . reverse) exprs
               exprs = map IntLiteral xs
+              addition = fromJust $ lookup "+" primitives
 
 prop_commutativeMul :: [Integer] -> Property
 prop_commutativeMul xs =
@@ -26,6 +25,7 @@ prop_commutativeMul xs =
         where rhs = (unwrap . multiplication) exprs
               lhs = (unwrap . multiplication . reverse) exprs
               exprs = map IntLiteral xs
+              multiplication = fromJust $ lookup "*" primitives
 
 return []
 runTests = $quickCheckAll
