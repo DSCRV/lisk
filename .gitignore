@@ -4,3 +4,5 @@ result
 
 # haskell
 dist-newstyle/
+
+.direnv
