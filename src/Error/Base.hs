@@ -12,7 +12,7 @@ import           Text.ParserCombinators.Parsec
 
 data LispError = Parse ParseError
                | BadForm String Expr
-               | ArgCount Int [Expr]
+               | ArgCount String Int [Expr]
                | UnknownFunction String
                | TypeMismatch String Expr
 
@@ -22,7 +22,10 @@ unwordsList = unwords . map show
 instance Show LispError where
     show (Parse e)              = "Parser Error: " ++ show e
     show (BadForm s expr)       = "Bad Form: " ++ s ++ ": " ++ show expr
-    show (ArgCount n es)        = "Invalid arity, expected " ++ show n ++ ", got value(s): " ++ unwordsList es
+    -- TODO: clean this up
+    show (ArgCount fn n es)
+      | null es = "Invalid arity, `" ++ fn ++ "` expects " ++ show n ++ " or more expression(s)!"
+      | otherwise = "Invalid arity, `" ++ fn ++ "` expects " ++ show n ++ " or more expression(s), got value(s): " ++ unwordsList es
     show (UnknownFunction fn)   = "Cannot apply function: " ++ fn
     show (TypeMismatch msg got) = "Type mismatch, expected " ++ msg ++ ", got: " ++ show got
 

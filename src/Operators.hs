@@ -7,21 +7,21 @@ import           Error.Base           (LispError (..), LispResult (..))
 import           Parser
 
 primitives :: [(String, [Expr] -> LispResult Expr)]
-primitives =
+primitives = map (\(n, f) -> (n, f n))
     [
-    ("+", arithmetic (+))
-    , ("-", arithmetic (-))
-    , ("*", arithmetic (*))
-    , ("/", arithmetic (/))
-    , (">", comparator (>))
-    , ("<", comparator (<))
-    , (">=", comparator (>=))
-    , ("<=", comparator (<=))
-    , ("=", comparator (==))
-    , ("!=", comparator (/=))
-    , ("not", unaryBool not)
-    , ("or", naryBool (||))
-    , ("and", naryBool (&&))
+           ("+" , arithmetic (+))
+         , ("-" , arithmetic (-))
+         , ("*" , arithmetic (*))
+         , ("/" , arithmetic (/))
+         , (">" , comparator (>))
+         , ("<" , comparator (<))
+         , (">=" , comparator (>=))
+         , ("<=" , comparator (<=))
+         , ("=" , comparator (==))
+         , ("!=" , comparator (/=))
+         , ("not" , unaryBool not)
+         , ("or" , naryBool  (||))
+         , ("and" , naryBool  (&&))
     ]
 
 data LispNumber = I Integer
@@ -46,33 +46,34 @@ instance Fractional LispNumber where
     (I a) / (F b) = F $ fromIntegral a / b
     (F a) / (F b) = F $ a / b
 
+type FName = String
 type Arithmetic = LispNumber -> LispNumber -> LispNumber
 type Comparator = LispNumber -> LispNumber -> Bool
 type UnaryBool = Bool -> Bool
 type NaryBool = Bool -> Bool -> Bool
 
-arithmetic :: Arithmetic -> [Expr] -> LispResult Expr
-arithmetic op args
-    | null args = throwError $ ArgCount 1 args
+arithmetic ::  Arithmetic -> FName -> [Expr] -> LispResult Expr
+arithmetic op name args
+    | null args = throwError $ ArgCount name 1 args
     | otherwise = do
         as <- mapM unwrapNum args
         return . wrapNum $ foldl1 op as
 
-comparator :: Comparator -> [Expr] -> LispResult Expr
-comparator op args
-    | length args < 2 = throwError $ ArgCount 2 args
+comparator :: Comparator -> FName -> [Expr] -> LispResult Expr
+comparator op name args
+    | length args < 2 = throwError $ ArgCount name 2 args
     | otherwise = do
         as <- mapM unwrapNum args
         return . BoolLiteral . all (== True) $ zipWith op as (tail as)
 
-unaryBool :: UnaryBool -> [Expr] -> LispResult Expr
-unaryBool op args
-  | length args /= 1 = throwError $ ArgCount 1 args
+unaryBool :: UnaryBool -> FName -> [Expr] -> LispResult Expr
+unaryBool op name args
+  | length args /= 1 = throwError $ ArgCount name 1 args
   | otherwise = BoolLiteral . op <$> unwrapBool (head args)
 
-naryBool :: NaryBool -> [Expr] -> LispResult Expr
-naryBool op args
-  | length args < 2 = throwError $ ArgCount 2 args
+naryBool :: NaryBool -> FName -> [Expr] -> LispResult Expr
+naryBool op name args
+  | length args < 2 = throwError $ ArgCount name 2 args
   | otherwise = do
       as <- mapM unwrapBool args
       return . BoolLiteral $ foldl1 op as
