@@ -24,7 +24,7 @@ literal v = "`" <> v <> "`"
 
 instance Show LispError where
     show (Parse e)              = "Parser Error: " ++ show e
-    show (BadForm s expr)       = "Bad Form: " ++ literal s ++ ": " ++ show expr
+    show (BadForm s expr)       = "Bad Form: " ++ s ++ ": " ++ show expr
     -- TODO: clean this up
     show (ArgCount fn n es)
       | null es = "Invalid arity, " ++ literal fn ++ " expects " ++ show n ++ " or more expression(s)!"
