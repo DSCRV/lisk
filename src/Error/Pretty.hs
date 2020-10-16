@@ -1,8 +1,7 @@
-module Error.Pretty (
-     showError
-     , Options (..)
-     , defaults
-    ) where
+module Error.Pretty ( showError
+                    , Options (..)
+                    , defaults
+                    ) where
 
 import           Data.List                     (intercalate, nub)
 import           Error.Base                    (LispError (..))

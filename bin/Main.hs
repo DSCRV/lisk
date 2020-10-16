@@ -1,7 +1,8 @@
 module Main where
 
 import           Control.Monad                 (liftM)
-import           Control.Monad.Except          (throwError)
+import           Control.Monad.Except          (liftIO, runExceptT, throwError)
+import           Environment
 import           Error.Base                    (LispError (..), LispResult (..),
                                                 unwrap)
 import           Error.Pretty                  (defaults, showError)
@@ -17,25 +18,31 @@ readExpr inp =
       Left err  -> throwError $ Parse err
       Right val -> return val
 
+evalExpr :: Env -> String -> IO (LispResult String)
+evalExpr env inp = runExceptT $ fmap show $
+    (liftLispResult $ readExpr inp) >>= eval env
 
-repl :: IO ()
-repl = do
-    -- \u2020 † - obelisk
+repl :: Env -> IO ()
+repl env = do
+    let pp = showError defaults "(lisk-repl)"
     inp <- readline "† "
     case inp of
       Nothing -> return ()
       Just ",q" -> return ()
-      Just line -> do
-          addHistory line
-          let pp = showError defaults
-          either (putStrLn . pp line) print $ readExpr line >>= eval
-          repl
+      Just i -> do
+          out <- evalExpr env i
+          either (putStrLn . pp) putStrLn out
+          repl env
+
 
 main :: IO ()
 main = do
     args <- getArgs
+    initEnv <- newEnv
     if null args
        then do
            putStrLn ";;; Entering lisk repl ..."
-           repl
-       else print $ eval =<< readExpr (head args)
+           repl initEnv
+       else do
+           let pp = showError defaults "(lisk-repl)"
+           evalExpr initEnv (head args) >>= (either (putStrLn . pp) print)

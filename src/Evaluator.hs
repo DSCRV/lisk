@@ -1,8 +1,7 @@
-module Evaluator (
-    eval
-    ) where
+module Evaluator (eval) where
 
 import           Control.Monad.Except
+import           Environment
 import           Error.Base                    (LispError (..), LispResult (..),
                                                 unwrap)
 import           Operators
@@ -15,18 +14,27 @@ apply fn args = maybe
     ($ args)
     (lookup fn primitives)
 
-eval :: Expr -> LispResult Expr
-eval v@(StringLiteral s) = return v
-eval v@(IntLiteral i)    = return v
-eval v@(BoolLiteral b)   = return v
-eval v@(FloatLiteral f)  = return v
-eval v@(Vector xs)       = liftM Vector $ mapM eval xs
--- handle quotes as literals
-eval (List[Id "quote", val])      = return val
-eval (List[Id "quasiquote", val]) = undefined
-eval (List[Id "unquote", val])    = undefined
-eval (List (Id fn : args))        = mapM eval args >>= apply fn
+eval :: Env -> Expr -> IOResult Expr
+eval _ v@(StringLiteral s) = return v
+eval _ v@(IntLiteral i)    = return v
+eval _ v@(BoolLiteral b)   = return v
+eval env (Id l)            = getVar env l
+eval _ v@(FloatLiteral f)  = return v
+eval env v@(Vector xs)     = liftM Vector $ mapM (eval env) xs
+eval env (List[Id "quote", val])      = return val
+eval env (List[Id "quasiquote", val]) = undefined
+eval env (List[Id "unquote", val])    = eval env val
+eval env (List [Id "set!", Id var, val]) = do
+    e <- eval env val
+    setVar env var e
+    return e
+eval env (List [Id "define", Id var, val]) = do
+    e <- eval env val
+    defineVar env var e
+    return e
+eval env (List (Id fn : args))        = mapM (eval env) args >>= liftLispResult . apply fn
+eval env NoReturn = throwError $ BadForm "Invalid usage of non-returning expression" NoReturn
 
 -- handle bad forms
-eval invalidForm = throwError $ BadForm "lisk can't recognize this form" invalidForm
+eval env invalidForm = throwError $ BadForm "lisk can't recognize this form" invalidForm
 

@@ -1,7 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Properties (
-                  runTests
-                  ) where
+module Properties (runTests) where
 
 import           Data.Maybe      (fromJust)
 import           Error.Base      (unwrap)
@@ -9,7 +7,6 @@ import           Evaluator       (eval)
 import           Operators       (primitives)
 import           Parser          (Expr (..), parseLispValue, parseQuote)
 import           Test.QuickCheck
-
 
 prop_commutativeAdd :: [Integer] -> Property
 prop_commutativeAdd xs =

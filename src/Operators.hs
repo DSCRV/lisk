@@ -1,6 +1,4 @@
-module Operators (
-    primitives
-    ) where
+module Operators (primitives) where
 
 import           Control.Monad.Except
 import           Error.Base           (LispError (..), LispResult (..))

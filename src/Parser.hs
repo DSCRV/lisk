@@ -22,6 +22,7 @@ data Expr = List [Expr]
           | FloatLiteral Double
           | BoolLiteral Bool
           | Id String
+          | NoReturn
           deriving (Eq)
 
 -- backslash double quote escapes a quote inside strings
@@ -127,3 +128,4 @@ instance Show Expr where
     show (BoolLiteral True)  = "#t"
     show (BoolLiteral False) = "#f"
     show (Id i)              = i
+    show NoReturn            = ";;; environment extension"

@@ -29,6 +29,7 @@ library
     Operators,
     Error.Base
     Error.Pretty
+    Environment
 
 executable lisk
   default-language: Haskell2010
