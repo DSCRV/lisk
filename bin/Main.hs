@@ -24,14 +24,14 @@ evalExpr env inp = runExceptT $ fmap show $
 
 repl :: Env -> IO ()
 repl env = do
-    let pp = showError defaults "(lisk-repl)"
+    let pp = showError defaults
     inp <- readline "† "
     case inp of
       Nothing -> return ()
       Just ",q" -> return ()
       Just i -> do
           out <- evalExpr env i
-          either (putStrLn . pp) putStrLn out
+          either (putStrLn . pp i) putStrLn out
           repl env
 
 
