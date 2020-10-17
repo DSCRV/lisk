@@ -19,9 +19,9 @@ apply fn args = maybe
 evalUnquote :: Env -> Expr -> IOResult Expr
 evalUnquote env (List [Id "unquote", vs]) = eval env vs
 evalUnquote env (List [Id "quote", vs]) =
-    liftM (List . ([Id "quote"] ++ ) . (: [])) (evalUnquote env vs)
-evalUnquote env (List vs)   = liftM List $ mapM (evalUnquote env) vs
-evalUnquote env (Vector vs) = liftM Vector $ mapM (evalUnquote env) vs
+    fmap (List . ([Id "quote"] ++ ) . (: [])) (evalUnquote env vs)
+evalUnquote env (List vs)   = List <$> mapM (evalUnquote env) vs
+evalUnquote env (Vector vs) = Vector <$> mapM (evalUnquote env) vs
 evalUnquote env literal = return literal
 
 evalQuasiQuote :: Env -> Expr -> IOResult Expr
@@ -35,12 +35,12 @@ eval _ v@(IntLiteral i)    = return v
 eval _ v@(BoolLiteral b)   = return v
 eval env (Id l)            = getVar env l
 eval _ v@(FloatLiteral f)  = return v
-eval env v@(Vector xs)     = liftM Vector $ mapM (eval env) xs
+eval env v@(Vector xs)     = Vector <$> mapM (eval env) xs
 eval env (List[Id "quote", val])      = return val
 eval env (List[Id "quasiquote", val]) = evalQuasiQuote env val
-eval env v@(List[Id "unquote", val])    = throwError $ BadForm "Cannot use `unquote` form outside quasiquote context" v
-eval env (List [Id "set!", Id var, val]) = eval env val >>= uncurry (*>) . ((setVar env var) &&& pure)
-eval env (List [Id "define", Id var, val]) = eval env val >>= uncurry (*>) . ((defineVar env var) &&& pure)
+eval env v@(List[Id "unquote", val])    = throwError $ BadForm "Cannot use `unquote` outside quasiquote form" v
+eval env (List [Id "set!", Id var, val]) = eval env val >>= uncurry (*>) . (setVar env var &&& pure)
+eval env (List [Id "define", Id var, val]) = eval env val >>= uncurry (*>) . (defineVar env var &&& pure)
 eval env (List (Id fn : args))        = mapM (eval env) args >>= liftLispResult . apply fn
 eval env NoReturn = throwError $ BadForm "Invalid usage of non-returning expression" NoReturn
 

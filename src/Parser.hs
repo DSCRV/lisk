@@ -8,7 +8,6 @@ module Parser ( parseLispValue
               ) where
 
 import           Control.Applicative           ((<$>))
-import           Control.Monad                 (liftM)
 import           Text.ParserCombinators.Parsec
 
 -- TODO: use LispNumber (src/Operators.hs) here instead of IntLiteral and FloatLiteral

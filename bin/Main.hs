@@ -20,7 +20,7 @@ readExpr inp =
 
 evalExpr :: Env -> String -> IO (LispResult String)
 evalExpr env inp = runExceptT $ fmap show $
-    (liftLispResult $ readExpr inp) >>= eval env
+    liftLispResult (readExpr inp) >>= eval env
 
 repl :: Env -> IO ()
 repl env = do
@@ -29,20 +29,17 @@ repl env = do
     case inp of
       Nothing -> return ()
       Just ",q" -> return ()
-      Just i -> do
-          out <- evalExpr env i
-          either (putStrLn . pp i) putStrLn out
-          repl env
+      Just i -> evalExpr env i >>= either (putStrLn . pp i) putStrLn >> repl env
 
 
 main :: IO ()
 main = do
     args <- getArgs
-    initEnv <- newEnv
+    env <- newEnv
     if null args
        then do
            putStrLn ";;; Entering lisk repl ..."
-           repl initEnv
+           repl env
        else do
            let pp = showError defaults "(lisk-repl)"
-           evalExpr initEnv (head args) >>= (either (putStrLn . pp) print)
+           evalExpr env (head args) >>= either (putStrLn . pp) print

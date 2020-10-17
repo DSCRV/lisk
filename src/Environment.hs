@@ -8,7 +8,8 @@ module Environment ( Env
                    , IOResult
                    ) where
 
-import           Control.Monad        (liftM, mapM)
+import           Control.Applicative  ((<$>))
+import           Control.Monad        (mapM)
 import           Control.Monad.Except
 import           Data.IORef
 import           Data.Maybe           (isJust)
@@ -44,7 +45,7 @@ setVar :: Env -> String -> Expr -> IOResult ()
 setVar env var val = do
     ptr <- liftIO $ readIORef env
     maybe (throwError $ UnboundVariable var)
-          (liftIO . (flip writeIORef val))
+          (liftIO . flip writeIORef val)
           $ lookup var ptr
 
 defineVar :: Env -> String -> Expr -> IOResult ()
@@ -65,5 +66,5 @@ makeBind (var, val) = do
 manyBindings :: Env -> [(String, Expr)] -> IO Env
 manyBindings env binds = do
     ptr <- readIORef env
-    extendedEnv <- liftM (++ ptr) $ mapM makeBind binds
+    extendedEnv <- (++ ptr) <$> mapM makeBind binds
     newIORef extendedEnv

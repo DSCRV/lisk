@@ -33,6 +33,7 @@ let
     pkgs.cabal2nix
     haskellPackages.cabal-install
     haskellPackages.hoogle
+    haskellPackages.hlint
   ];
 in
 pkgs.stdenv.mkDerivation {
