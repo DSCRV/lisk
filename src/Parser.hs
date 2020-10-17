@@ -21,7 +21,6 @@ data Expr = List [Expr]
           | FloatLiteral Double
           | BoolLiteral Bool
           | Id String
-          | NoReturn
           deriving (Eq)
 
 -- backslash double quote escapes a quote inside strings
@@ -83,15 +82,16 @@ optionalWhiteSpace :: Parser ()
 optionalWhiteSpace = skipMany $ oneOf [' ', '\n']
 
 type Alias = String
-parseModifier :: Char -> Alias -> Parser Expr
-parseModifier c alias = do
-    char c
+parseModifier :: String -> Alias -> Parser Expr
+parseModifier s alias = do
+    string s
     x <- parseLispValue
     return $ List [Id alias, x]
 
-parseQuote = parseModifier '\'' "quote"
-parseQuasiquote = parseModifier '`' "quasiquote"
-parseUnquote = parseModifier ',' "unquote"
+parseQuote           = parseModifier "'" "quote"
+parseQuasiquote      = parseModifier "`" "quasiquote"
+parseUnquote         = parseModifier "," "unquote"
+parseUnquoteSplicing = parseModifier ",@" "unquote-splicing"
 -- TODO: add modifier for unquote splicing: ,@
 
 parseLispValue :: Parser Expr
@@ -103,8 +103,8 @@ parseLispValue =
     <|> try parseId
     <|> parseQuote
     <|> parseQuasiquote
+    <|> try parseUnquoteSplicing
     <|> parseUnquote
-    -- handles lists and dotted lists
     <|> do
         char '(' >> optionalWhiteSpace
         x <- sepEndBy parseLispValue whiteSpace
@@ -127,4 +127,3 @@ instance Show Expr where
     show (BoolLiteral True)  = "#t"
     show (BoolLiteral False) = "#f"
     show (Id i)              = i
-    show NoReturn            = ";;; environment extension"
