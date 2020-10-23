@@ -1,5 +1,6 @@
 module Evaluator (eval) where
 
+import           Base
 import           Control.Applicative           ((*>))
 import           Control.Arrow                 ((&&&))
 import           Control.Monad.Except
@@ -7,7 +8,6 @@ import           Environment
 import           Error.Base                    (LispError (..), LispResult (..),
                                                 unwrap)
 import           Operators
-import           Parser
 import           Text.ParserCombinators.Parsec
 
 apply :: String -> [Expr] -> LispResult Expr
@@ -20,6 +20,7 @@ evalUnquoteSplicing :: Env -> Expr -> IOResult Expr
 evalUnquoteSplicing env (List xs) = List <$> mapM (eval env) xs
 evalUnquoteSplicing env literal   = return literal
 
+-- might be worth including unquote and unquote-splicing in lisk's prelude
 evalUnquote :: Env -> Expr -> IOResult Expr
 evalUnquote env (DottedList h t)                  = List . (:[]) <$> liftM2 DottedList (mapM (evalUnquote env) h) (evalUnquote env t)
 evalUnquote env (Vector vs)                       = List . (:[]) . Vector <$> mapM (evalUnquote env) vs

@@ -1,5 +1,6 @@
 module Main where
 
+import           Base                          (Expr (..))
 import           Control.Monad                 (liftM)
 import           Control.Monad.Except          (liftIO, runExceptT, throwError)
 import           Environment
@@ -7,7 +8,7 @@ import           Error.Base                    (LispError (..), LispResult (..),
                                                 unwrap)
 import           Error.Pretty                  (defaults, showError)
 import           Evaluator                     (eval)
-import           Parser                        (Expr (..), parseLispValue)
+import           Parser                        (parseLispValue)
 import           System.Console.Readline
 import           System.Environment            (getArgs)
 import           Text.ParserCombinators.Parsec
@@ -29,7 +30,10 @@ repl env = do
     case inp of
       Nothing -> return ()
       Just ",q" -> return ()
-      Just i -> evalExpr env i >>= either (putStrLn . pp i) putStrLn >> repl env
+      Just i -> do
+          addHistory i
+          evalExpr env i >>= either (putStrLn . pp i) putStrLn
+          repl env
 
 
 main :: IO ()

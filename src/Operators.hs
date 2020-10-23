@@ -1,8 +1,8 @@
 module Operators (primitives) where
 
+import           Base
 import           Control.Monad.Except
 import           Error.Base           (LispError (..), LispResult (..))
-import           Parser
 
 primitives :: [(String, [Expr] -> LispResult Expr)]
 primitives = map (\(n, f) -> (n, f n))

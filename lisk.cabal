@@ -24,6 +24,7 @@ library
     parsec == 3.*,
     mtl >= 2.1
   exposed-modules: 
+    Base,
     Parser,
     Evaluator,
     Operators,

@@ -1,5 +1,4 @@
 module Parser ( parseLispValue
-              , Expr(..)
               , parseString
               , parseInt
               , parseFloat
@@ -7,21 +6,9 @@ module Parser ( parseLispValue
               , parseQuote
               ) where
 
+import           Base                          (Expr (..), Function)
 import           Control.Applicative           ((<$>))
 import           Text.ParserCombinators.Parsec
-
--- TODO: use LispNumber (src/Operators.hs) here instead of IntLiteral and FloatLiteral
--- TODO: add character literals: \#a \#b \#c \#space \#newline
--- TODO: add support for complex numbers, oct and hex numbers
-data Expr = List [Expr]
-          | Vector [Expr]
-          | DottedList [Expr] Expr
-          | StringLiteral String
-          | IntLiteral Integer
-          | FloatLiteral Double
-          | BoolLiteral Bool
-          | Id String
-          deriving (Eq)
 
 -- backslash double quote escapes a quote inside strings
 quotedChar = noneOf ['\"'] <|> try (string "\\\"" >> return '"')
@@ -92,7 +79,6 @@ parseQuote           = parseModifier "'" "quote"
 parseQuasiquote      = parseModifier "`" "quasiquote"
 parseUnquote         = parseModifier "," "unquote"
 parseUnquoteSplicing = parseModifier ",@" "unquote-splicing"
--- TODO: add modifier for unquote splicing: ,@
 
 parseLispValue :: Parser Expr
 parseLispValue =
@@ -114,16 +100,3 @@ parseLispValue =
         return $ maybe (List x) (DottedList x) t
     <?> "lisp value"
 
-showLispList :: [Expr] -> String
-showLispList = unwords . map show
-
-instance Show Expr where
-    show (DottedList xs x)   = "(" ++ showLispList xs ++ " . " ++ show x ++ ")"
-    show (List xs)           = "(" ++ showLispList xs ++ ")"
-    show (Vector xs)         = "#(" ++ showLispList xs ++ ")"
-    show (StringLiteral s)   = "\"" ++ s ++ "\""
-    show (IntLiteral n)      = show n
-    show (FloatLiteral n)    = show n
-    show (BoolLiteral True)  = "#t"
-    show (BoolLiteral False) = "#f"
-    show (Id i)              = i

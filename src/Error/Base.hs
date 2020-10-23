@@ -3,8 +3,8 @@ module Error.Base ( LispError (..)
                   , unwrap
                   ) where
 
+import           Base                          (Expr (..))
 import           Control.Monad.Except
-import           Parser
 import           Text.Parsec
 import           Text.Parsec.Error
 import           Text.ParserCombinators.Parsec

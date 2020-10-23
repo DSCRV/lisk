@@ -8,15 +8,13 @@ module Environment ( Env
                    , IOResult
                    ) where
 
+import           Base                 (Env (..), Expr (..))
 import           Control.Applicative  ((<$>))
 import           Control.Monad        (mapM)
 import           Control.Monad.Except
 import           Data.IORef
 import           Data.Maybe           (isJust)
 import           Error.Base           (LispError (..), LispResult (..), unwrap)
-import           Parser               (Expr (..))
-
-type Env = IORef [(String, IORef Expr)]
 
 newEnv :: IO Env
 newEnv = newIORef []
