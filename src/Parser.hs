@@ -12,12 +12,6 @@ import           Control.Applicative           ((<$>))
 import           Text.ParserCombinators.Parsec
 
 
-parseComment :: Parser ()
-parseComment = do
-    char ';'
-    innards <- many (noneOf ['\n'])
-    return ()
-    
 
 -- backslash double quote escapes a quote inside strings
 quotedChar = noneOf ['\"'] <|> try (string "\\\"" >> return '"')
@@ -71,15 +65,25 @@ parseId = do
                "#f" -> BoolLiteral False
                _    -> Id atom
 
+-- atmosphere
+parseComment :: Parser ()
+parseComment = do
+    char ';'
+    skipMany (noneOf ['\n'])
+    -- skipMany $ char '\n'
+    return ()
+    
+
 whiteSpace :: Parser ()
-whiteSpace = 
-    skipMany1 ( oneOf [' ', '\n'])
-    <|> parseComment
+whiteSpace = do
+    optionMaybe parseComment
+    skipMany1 ( oneOf [' ', '\n']) <?> "whitespace or newline"
+    return ()
 
 optionalWhiteSpace :: Parser ()
-optionalWhiteSpace = 
-    skipMany ( oneOf [' ', '\n'])
-    <|> parseComment
+optionalWhiteSpace = do
+    optionMaybe $ whiteSpace
+    return ()
 
 type Alias = String
 parseModifier :: String -> Alias -> Parser Expr
