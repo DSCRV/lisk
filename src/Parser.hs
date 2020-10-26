@@ -97,12 +97,6 @@ parseQuasiquote      = parseModifier "`" "quasiquote"
 parseUnquote         = parseModifier "," "unquote"
 parseUnquoteSplicing = parseModifier ",@" "unquote-splicing"
 
--- parseLispValue = do
---     pepe <- parseLispValueNoComments 
---     try parseComment
---     return pepe
-
-
 parseLispValue :: Parser Expr
 parseLispValue = 
         parseString
