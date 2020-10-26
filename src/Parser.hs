@@ -4,11 +4,20 @@ module Parser ( parseLispValue
               , parseFloat
               , parseId
               , parseQuote
+              , parseComment
               ) where
 
 import           Base                          (Expr (..), Function)
 import           Control.Applicative           ((<$>))
 import           Text.ParserCombinators.Parsec
+
+
+parseComment :: Parser ()
+parseComment = do
+    char ';'
+    innards <- many (noneOf ['\n'])
+    return ()
+    
 
 -- backslash double quote escapes a quote inside strings
 quotedChar = noneOf ['\"'] <|> try (string "\\\"" >> return '"')
@@ -63,10 +72,14 @@ parseId = do
                _    -> Id atom
 
 whiteSpace :: Parser ()
-whiteSpace = skipMany1 $ oneOf [' ', '\n']
+whiteSpace = 
+    skipMany1 ( oneOf [' ', '\n'])
+    <|> parseComment
 
 optionalWhiteSpace :: Parser ()
-optionalWhiteSpace = skipMany $ oneOf [' ', '\n']
+optionalWhiteSpace = 
+    skipMany ( oneOf [' ', '\n'])
+    <|> parseComment
 
 type Alias = String
 parseModifier :: String -> Alias -> Parser Expr
@@ -80,9 +93,15 @@ parseQuasiquote      = parseModifier "`" "quasiquote"
 parseUnquote         = parseModifier "," "unquote"
 parseUnquoteSplicing = parseModifier ",@" "unquote-splicing"
 
+-- parseLispValue = do
+--     pepe <- parseLispValueNoComments 
+--     try parseComment
+--     return pepe
+
+
 parseLispValue :: Parser Expr
-parseLispValue =
-    parseString
+parseLispValue = 
+        parseString
     <|> try parseFloat
     <|> try parseInt
     <|> try parseVector
@@ -98,5 +117,7 @@ parseLispValue =
         t <- optionMaybe $ char '.' >> space >> parseLispValue
         optionalWhiteSpace >> char ')'
         return $ maybe (List x) (DottedList x) t
-    <?> "lisp value"
+    <?> "lisp value";
+    -- try parseComment;
+    -- return pepe;
 
