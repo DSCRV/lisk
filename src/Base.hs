@@ -1,6 +1,5 @@
 module Base (Expr (..)
             , Env (..)
-            , Function (..)
             ) where
 
 import           Data.IORef
@@ -16,10 +15,10 @@ data Expr = List [Expr]
           | FloatLiteral Double
           | BoolLiteral Bool
           | Id String
-          deriving (Eq)
+          | Function Fn
 
-data Function =
-    Function {
+data Fn =
+    Fn {
     params        :: [String]
     , body        :: Expr
     , environment :: Env
@@ -31,12 +30,13 @@ showLispList :: [Expr] -> String
 showLispList = unwords . map show
 
 instance Show Expr where
-    show (DottedList xs x)   = "(" ++ showLispList xs ++ " . " ++ show x ++ ")"
-    show (List xs)           = "(" ++ showLispList xs ++ ")"
-    show (Vector xs)         = "#(" ++ showLispList xs ++ ")"
-    show (StringLiteral s)   = "\"" ++ s ++ "\""
-    show (IntLiteral n)      = show n
-    show (FloatLiteral n)    = show n
-    show (BoolLiteral True)  = "#t"
-    show (BoolLiteral False) = "#f"
-    show (Id i)              = i
+    show (DottedList xs x)               = "(" ++ showLispList xs ++ " . " ++ show x ++ ")"
+    show (List xs)                       = "(" ++ showLispList xs ++ ")"
+    show (Vector xs)                     = "#(" ++ showLispList xs ++ ")"
+    show (StringLiteral s)               = "\"" ++ s ++ "\""
+    show (IntLiteral n)                  = show n
+    show (FloatLiteral n)                = show n
+    show (BoolLiteral True)              = "#t"
+    show (BoolLiteral False)             = "#f"
+    show (Id i)                          = i
+    show (Function (Fn params body env)) = "<#procedure " ++ unwords params ++ ">"

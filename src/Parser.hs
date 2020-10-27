@@ -2,11 +2,12 @@ module Parser ( parseLispValue
               , parseString
               , parseInt
               , parseFloat
+              , parseComment
               , parseId
               , parseQuote
               ) where
 
-import           Base                          (Expr (..), Function)
+import           Base                          (Expr (..))
 import           Control.Applicative           ((<$>))
 import           Text.ParserCombinators.Parsec
 
@@ -62,11 +63,14 @@ parseId = do
                "#f" -> BoolLiteral False
                _    -> Id atom
 
+parseComment :: Parser ()
+parseComment = char ';' >> manyTill anyChar (char '\n') >> return ()
+
 whiteSpace :: Parser ()
-whiteSpace = skipMany1 $ oneOf [' ', '\n']
+whiteSpace = parseComment <|> (skipMany1 $ oneOf [' ', '\n'])
 
 optionalWhiteSpace :: Parser ()
-optionalWhiteSpace = skipMany $ oneOf [' ', '\n']
+optionalWhiteSpace = parseComment <|> (skipMany $ oneOf [' ', '\n'])
 
 type Alias = String
 parseModifier :: String -> Alias -> Parser Expr
