@@ -9,10 +9,9 @@ module Parser ( parseLispValue
 
 import           Base                          (Expr (..), Function)
 import           Control.Applicative           ((<$>))
+import           Control.Monad                 (void)
+import           Text.Parsec.Char
 import           Text.ParserCombinators.Parsec
-import Text.Parsec.Char
-
-
 
 -- backslash double quote escapes a quote inside strings
 quotedChar = noneOf ['\"'] <|> try (string "\\\"" >> return '"')
@@ -71,26 +70,16 @@ parseComment :: Parser ()
 parseComment = do
     char ';'
     -- get internals of comment by getting it from here
-    manyTill anyChar (try (eol<|> eof))
-    return ()
-        where eol = endOfLine >>return ()
-    
+    void $ manyTill anyChar $ try $ eol <|> eof
+        where eol = void endOfLine
 
--- whiteSpace :: Parser ()
--- whiteSpace = do
---     optionMaybe parseComment
---     skipMany1 ( oneOf [' ', '\n']) <?> "whitespace or endOfLine"
---     return ()
 whiteSpace::Parser()
-whiteSpace = skipMany( parseComment <|> nl <|> spc ) 
-    where nl = endOfLine >>return ()
-          spc = space >> return ()
-
+whiteSpace = skipMany $ parseComment <|> nl <|> spc
+    where nl = void endOfLine
+          spc = void space
 
 optionalWhiteSpace :: Parser ()
-optionalWhiteSpace = do
-    optionMaybe $ whiteSpace
-    return ()
+optionalWhiteSpace = void $ optionMaybe whiteSpace
 
 type Alias = String
 parseModifier :: String -> Alias -> Parser Expr
@@ -105,7 +94,7 @@ parseUnquote         = parseModifier "," "unquote"
 parseUnquoteSplicing = parseModifier ",@" "unquote-splicing"
 
 parseLispValue :: Parser Expr
-parseLispValue = 
+parseLispValue =
         parseString
     <|> try parseFloat
     <|> try parseInt
