@@ -10,6 +10,7 @@ module Parser ( parseLispValue
 import           Base                          (Expr (..), Function)
 import           Control.Applicative           ((<$>))
 import           Text.ParserCombinators.Parsec
+import Text.Parsec.Char
 
 
 
@@ -69,16 +70,22 @@ parseId = do
 parseComment :: Parser ()
 parseComment = do
     char ';'
-    skipMany (noneOf ['\n'])
-    -- skipMany $ char '\n'
+    -- get internals of comment by getting it from here
+    manyTill anyChar (try (eol<|> eof))
     return ()
+        where eol = endOfLine >>return ()
     
 
-whiteSpace :: Parser ()
-whiteSpace = do
-    optionMaybe parseComment
-    skipMany1 ( oneOf [' ', '\n']) <?> "whitespace or newline"
-    return ()
+-- whiteSpace :: Parser ()
+-- whiteSpace = do
+--     optionMaybe parseComment
+--     skipMany1 ( oneOf [' ', '\n']) <?> "whitespace or endOfLine"
+--     return ()
+whiteSpace::Parser()
+whiteSpace = skipMany( parseComment <|> nl <|> spc ) 
+    where nl = endOfLine >>return ()
+          spc = space >> return ()
+
 
 optionalWhiteSpace :: Parser ()
 optionalWhiteSpace = do
