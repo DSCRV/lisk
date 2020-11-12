@@ -22,6 +22,7 @@ library
   build-depends: 
     base == 4.*,
     parsec == 3.*,
+    containers >= 0.6,
     mtl >= 2.1
   exposed-modules: 
     Base,

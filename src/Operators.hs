@@ -3,9 +3,11 @@ module Operators (primitives) where
 import           Base
 import           Control.Monad.Except
 import           Error.Base           (LispError (..), LispResult (..))
+import qualified Data.Map as M
 
-primitives :: [(String, [Expr] -> LispResult Expr)]
-primitives = map (\(n, f) -> (n, f n))
+-- primitives :: [(String, [Expr] -> LispResult Expr)]
+primitives :: M.Map String ([Expr] -> LispResult Expr)
+primitives = M.fromList $ map (\(n, f) -> (n, f n))
     [
     ("+", arithmetic (+))
     , ("-", arithmetic (-))
@@ -26,28 +28,6 @@ primitives = map (\(n, f) -> (n, f n))
     , ("null?", isNull)
     ]
 
-data LispNumber = I Integer
-                | F Double
-                deriving (Eq, Ord)
-
-instance Num LispNumber where
-    -- TODO:
-    -- float op anything = float
-    -- int op int = int
-    -- int op float = float
-    (I a) + (I b) = I $ a + b
-    (F a) + (F b) = F $ a + b
-    (I a) - (I b) = I $ a - b
-    (F a) - (F b) = F $ a - b
-    (I a) * (I b) = I $ a * b
-    (F a) * (F b) = F $ a * b
-
-instance Fractional LispNumber where
-    (I a) / (I b) = F $ fromIntegral a / fromIntegral b
-    (F a) / (I b) = F $ a / fromIntegral b
-    (I a) / (F b) = F $ fromIntegral a / b
-    (F a) / (F b) = F $ a / b
-
 type FName = String
 type Arithmetic = LispNumber -> LispNumber -> LispNumber
 type Comparator = LispNumber -> LispNumber -> Bool
@@ -59,7 +39,7 @@ arithmetic op name args
     | null args = throwError $ ArgCount name 1 args
     | otherwise = do
         as <- mapM unwrapNum args
-        return . wrapNum $ foldl1 op as
+        return . Number $ foldl1 op as
 
 comparator :: Comparator -> FName -> [Expr] -> LispResult Expr
 comparator op name args
@@ -81,13 +61,8 @@ naryBool op name args
       return . BoolLiteral $ foldl1 op as
 
 unwrapNum :: Expr -> LispResult LispNumber
-unwrapNum (IntLiteral n)   =  return $ I n
-unwrapNum (FloatLiteral n) =  return $ F n
-unwrapNum x                = throwError $ TypeMismatch "number" x
-
-wrapNum :: LispNumber -> Expr
-wrapNum (I n) = IntLiteral n
-wrapNum (F n) = FloatLiteral n
+unwrapNum (Number x) = return x
+unwrapNum x          = throwError $ TypeMismatch "number" x
 
 unwrapBool :: Expr -> LispResult Bool
 unwrapBool (BoolLiteral s) = return s
