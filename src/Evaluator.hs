@@ -9,12 +9,13 @@ import           Error.Base                    (LispError (..), LispResult (..),
                                                 unwrap)
 import           Operators
 import           Text.ParserCombinators.Parsec
+import qualified Data.Map as M
 
 apply :: String -> [Expr] -> LispResult Expr
 apply fn args = maybe
     (throwError $ UnknownFunction fn)
     ($ args)
-    (lookup fn primitives)
+    (M.lookup fn primitives)
 
 evalUnquoteSplicing :: Env -> Expr -> IOResult Expr
 evalUnquoteSplicing env (List xs) = List <$> mapM (eval env) xs
@@ -39,10 +40,8 @@ evalQuasiQuote env literal      = return literal -- just behave like quote other
 
 eval :: Env -> Expr -> IOResult Expr
 eval _ v@(StringLiteral s)                    = return v
-eval _ v@(IntLiteral i)                       = return v
-eval _ v@(BoolLiteral b)                      = return v
+eval _ v@(Number i)                           = return v
 eval env (Id l)                               = getVar env l
-eval _ v@(FloatLiteral f)                     = return v
 eval env v@(Vector xs)                        = Vector <$> mapM (eval env) xs
 eval env (List[Id "quote", val])              = return val
 eval env (List[Id "quasiquote", val])         = evalQuasiQuote env val
@@ -50,6 +49,7 @@ eval env v@(List[Id "unquote", val])          = throwError $ BadForm "Cannot use
 eval env v@(List[Id "unquote-splicing", val]) = throwError $ BadForm "Cannot use `unquote-splicing` outside quasiquote form" v
 eval env (List [Id "set!", Id var, val]) = eval env val >>= uncurry (*>) . (setVar env var &&& pure)
 eval env (List [Id "define", Id var, val]) = eval env val >>= uncurry (*>) . (defineVar env var &&& pure)
+-- eval env (List (Id "lambda":List params:body)) = evalLambda params body env
 eval env (List (Id fn : args))        = mapM (eval env) args >>= liftLispResult . apply fn
 
 -- handle bad forms
@@ -58,3 +58,7 @@ eval env invalidForm = throwError $ BadForm "lisk can't recognize this form" inv
 unwrapList :: Expr -> [Expr]
 unwrapList (List x) = x
 unwrapList literal  = [literal]
+
+-- evalLambda :: [Expr] -> Expr -> Env -> IOResult Expr
+-- evalLambda params body env = do
+--     extendedEnv <- manyBindings env

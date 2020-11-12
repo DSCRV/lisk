@@ -64,5 +64,4 @@ makeBind (var, val) = do
 manyBindings :: Env -> [(String, Expr)] -> IO Env
 manyBindings env binds = do
     ptr <- readIORef env
-    extendedEnv <- (++ ptr) <$> mapM makeBind binds
-    newIORef extendedEnv
+    newIORef =<< (++ ptr) <$> mapM makeBind binds

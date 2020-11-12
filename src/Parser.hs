@@ -7,7 +7,7 @@ module Parser ( parseLispValue
               , parseComment
               ) where
 
-import           Base                          (Expr (..), Function)
+import           Base                          (Expr (..), LispNumber(..))
 import           Control.Applicative           ((<$>))
 import           Control.Monad                 (void)
 import           Text.Parsec.Char
@@ -34,7 +34,7 @@ parseInt :: Parser Expr
 parseInt = do
     sign <- parseSign
     val <- many1 digit
-    return $ (IntLiteral . read) $ maybe val (:val) sign
+    return $ (Number . I . read) $ maybe val (:val) sign
 
 parseFloat :: Parser Expr
 parseFloat = do
@@ -43,7 +43,7 @@ parseFloat = do
     char '.'
     mantissa <- many1 digit
     let fval = characteristic ++ "." ++ mantissa
-    return $ (FloatLiteral . read) $ maybe fval (:fval) sign
+    return $ (Number . F . read) $ maybe fval (:fval) sign
 
 parseVector :: Parser Expr
 parseVector = do
@@ -112,6 +112,4 @@ parseLispValue =
         optionalWhiteSpace >> char ')'
         return $ maybe (List x) (DottedList x) t
     <?> "lisp value";
-    -- try parseComment;
-    -- return pepe;
 
